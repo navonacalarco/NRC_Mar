@@ -1,0 +1,14 @@
+---
+title: "omega"
+output: html_document
+---
+
+#omega calculations for NRC project
+#citation, Dunn et al., 2013
+
+```{r setup, include=FALSE}
+
+install.packages('MBESS')
+
+
+```
