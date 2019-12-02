@@ -13,24 +13,29 @@ output:
 __Code written:__ 2019-11-30  
 __Last run:__ `r Sys.Date()`   
 __Authors:__ Navona Calarco & Colin Decker  
-__R version laptop:__ `r version`  
+__Git repo:__ https://github.com/navonacalarco/NRC_Mar  
+__R version laptop:__ platform: x86_64-apple-darwin15.6.0, arch: x86_64, os: darwin15.6.0, system: x86_64, darwin15.6.0, major: 3, minor: 5.3, year: 2019, month: 03, day: 11, svn rev: 76217, language: R, version.string: R version 3.5.3 (2019-03-11), nickname: Great Truth  
+__R version desktop:__ platform: x86_64-apple-darwin15.6.0, arch: x86_64, os: darwin15.6.0, system: x86_64, darwin15.6.0, major: 3, minor: 5.1, year: 2018, month: 07, day: 02, svn rev: 74947, language: R, version.string: R version 3.5.1 (2018-07-02), nickname: Feather Spray  
+__R version CAMH:__ platform: x86_64-pc-linux-gnu, arch: x86_64, os: linux-gnu, system: x86_64, linux-gnu, major: 3, minor: 5.0, year: 2018, month: 04, day: 3, svn rev: 74626, language: R, version.string: R version 3.5.0 (2018-04-23), nickname: Joy in Playing  
 
 -----
 
-__Description__  
+__Description.__  
 This notebook details our attempts to obtain categorical omega reliability estimates and CIs on data from Dr. Mar's NRC study. We intend to estimate omega/CIs separately for subscales (as global scales are not unidimesional). 
 
-__Relevant papers we read__.  
-McDonald (1999)  
-Dunn et al. (2013)    
-Kelley and Pornprasertmanit (2016)    
-Green and Yang (2009)    
+__Relevant papers we read.__  
+Dunn et al. (2013)      
+Green and Yang (2009)      
+Kelley and Pornprasertmanit (2016)      
+McDonald (1999)    
 
 __Relevant documentation__.  
 https://www.rdocumentation.org/packages/MBESS/versions/4.6.0/topics/ci.reliability #MBESS  
 https://github.com/cran/MBESS/blob/master/R/ci.reliability.R #code underlying ci.reliability()  
-https://personality-project.org/r/psych/help/omega.html #psych omega
 
+-----
+
+__Setup.__
 
 ```{r setup}
 
@@ -87,7 +92,7 @@ df_fict_no0var <- df_fict[, colSums(df_fict != 0) > 0] #we have 0 variance if al
 
 ```
 
-__Outcome__. The code still fails; this time, R crashes after several minutes. No idea...
+__Outcome__. The code still fails; this time, R crashes after several minutes. No warnings. No idea...
 
 -----
 
@@ -106,13 +111,13 @@ test_1 <- as.data.frame(matrix(rbinom(200*108,1,0.5),200, 108)) #same features o
 
 ```
 
-__Outcome__. Again, R crashes after several minutes, without any error output. 
+__Outcome__. Again, R crashes after several minutes, without any error output. Perhaps we have too many variables compared to observations ... we didn't expect this would be an issue, but it may be. 
 
 -----
 
 ####Attempt 4
 
-Maybe we have too many variables _m_ compared to our number of observations _n_? Let's arbitrarily make our data smaller (_m_=20)... this should also help with runtime (which we will capture with the `tictoc` library).
+We want to test if we have too many variables _m_ compared to our number of observations _n_.  We arbitrarily make our data smaller (_m_=20) and run the same code as before. This should also help with runtime (which we will capture with the `tictoc` library).
 
 ```{r}
 
@@ -140,7 +145,7 @@ We have warning from `lavann` about negative variances, but this may be OK if th
 
 ####Attempt 5
 
-Spurred on by our success above, we try to run our code on a smaller subset (again, _m_=20) of our real ART fiction data. First, we try data without any of the variables with 0 variance. 
+Spurred on by our success above, we try to run our code on a smaller subset (again, _m_=20) of our real ART fiction data. First, we try data without the two variables with 0 variance. 
 
 ```{r}
 
@@ -161,7 +166,7 @@ This error comes from the `bca.ci`, which is called by `boot.out`, which is call
 -----
 
 ####Attempt 6
-We run the same code, again on our real ART fiction data (with potentially problematic 0 variance variables removed), this time with 1000 iterations. We'll also record the time it takes to run this code, if it works. 
+We run the same code, again on 20 variables from our real ART fiction data (with potentially problematic 0 variance variables excluded), this time with 1000 iterations. We'll also record the time it takes to run this code, if it works. 
 
 ```{r}
 
@@ -174,15 +179,15 @@ We run the same code, again on our real ART fiction data (with potentially probl
 
 ```
 
-__Outcome:__ The code runs! It takes 884.91 seconds (14.7485 minutes) to run. We have a _huge_ amount of output. Essentially, we have 1000 instances of the chunk below, one for each iteration: 
+__Outcome:__ The code runs! It takes 884.91 seconds (14.7485 minutes) to run. We have a _huge_ amount of output. Essentially, we have 1000 instances of the chunk below, one for each bootstrap iteration: 
 
 ![](imgs/06_output.png)
 
-Here, we see the the `mean` and `var` columns in the statistical output are again NA, as in 'Attempt 1'. But, our code ran, and we seem (below) to have reasonable omega and CI estimates (?), so maybe, it's not the case that the NA values in the `mean` and `var` columnes aren't a problem...?
+Here, we see the the `mean` and `var` columns in the statistical output are again NA, as in 'Attempt 1'. But, our code ran, and we seem (below) to have reasonable omega and CI estimates (?), so maybe, it's not the case that the NA values in the `mean` and `var` columns aren't a problem...?
 
-We also see that, in some output, some variables have an `nlev` (number of levels) values of 1, whereas most others have 2. The variables with `nlev` of 1 are indicated by `***`. There is some pattern to the variables that are flagged (e.g., 5 appears a lot, but not always), but there is variability between chunks. 
+We also see that, in some output, some variables have an `nlev` (number of levels) values of 1, whereas most others have 2. The variables with `nlev` of 1 are indicated by `***`. There is some pattern to the variables that are flagged (e.g., 5 appears a lot, but not always), but there is variability between chunks. This is a result of the partial resampling randomly selecting a subset that results in no variance, we think...
 
-At the bottom of several chunks, we see warnings. Some chunks have no warnings, some have 3 or more. The warnings shown in the image below appear a lot. It seems that all warnings are limited to these 3 types. The first appears many times; the second several times, and the third a small number of times, with a small coupling of variables, always seeming to include 17 (paired with 13, 9, 11))  
+At the bottom of several of the 1000 boostrap report chunks, we see warnings. Some chunks have no warnings, some have 3 or more. The warnings shown in the image below appear a lot. It seems that all warnings are limited to these 3 types. The first appears many times; the second several times, and the third a small number of times, with a small coupling of variables, always seeming to include 17 (paired with 13, 9, 11))  
 ![](imgs/06_warnings.png)
 
 Finally, after 1000 chunks of this sort, we do get output from the model: 
@@ -192,12 +197,12 @@ Finally, after 1000 chunks of this sort, we do get output from the model:
 -----
 
 ####Attempt 7
-We are no longer confident that the variables with 0 variance, in our real ART fiction data, pose a problem for our estimate. So, we want to attempt to run our code with those variables left in. 
+Because we saw above that the bootstrap output indicates NA for `mean` and `var`, we are no longer confident that variables with 0 variance pose a problem for our estimate. So, we want to attempt to run our code with those 0 variance variables left in. 
 
 ```{r}
 
 #find the 2 variables with 0 variance
-which(apply(df_fict, 2, var) == 0) #vars 17 and 31 ... so our Attempt #6 includes 1 variable (ART122) with no variance!
+which(apply(df_fict, 2, var) == 0) #vars 17 and 31 
 
 #include them in our new df, along with 18 other vars
 df_fict_small0var <- df_fict[, c(1:19, 31)]
@@ -207,62 +212,55 @@ df_fict_small0var <- df_fict[, c(1:19, 31)]
 
 ```
 
-__Outcome.__ The code fails, quickly, with the error below, which confirms that variables with 0 variance do pose a problem for our estimates. We will have to do something about these problematic variables when we analyze our data.
+__Outcome.__ The code fails, quickly, with the error below, which seems to confirm that variables with 0 variance do pose a problem for estimates. We will have to do something about these problematic variables when we analyze our data.
 ![](imgs/07_0varError.png)
 
 -----
 
 ####Attempt 8
 
-By way of summary, we know that, (1) our data can't contain variables with 0 variance, (2) we may need to run a large number of bootstraps to get the code to run, and (3) our data may have too many variables _m_ for our number of observations _n_. Bust just how many _m_ are too many _m_?
-
-Next, let's see if we can run our estimates on our other ART subscales, which contain fewer variables. First, let's try the non-fiction subscale, which contains 50 variables. We'll keep 1000 iterations to be safe. 
+Now, we are wondering if we have a problem with variables with low variance, in addition to no variance. Here, we omit 80% of variables, that have the lowest variance (80% is arbitrary). We expect this code should work since we known running with 20 variables work, and omitting the bottom 80% will leave us with 23 variables. We want to compare our omega and CI estimates. 
 
 ```{r}
 
-#check if any vars have 0 variance
-sum(apply(df_nonf, 2, var) == 0) #none, great
+#get a vector of variances
+variances <- apply(FUN=var, df_fict, MARGIN=2)
 
-#tic()
+#calculate how many variables to omit
+cutoff_1 <- round(ncol(df_fict)*0.8) #86
+
+#order the variances, and keep the n-32 largest ones
+highVar_1 <- order(variances)[cutoff_1:ncol(df_fict)]
+
+#make a new df with only relatively high variance variables
+df_fict_highVar_1 <- df_fict[, highVar_1]
 
 #run the same code on our new data
-ci.reliability(data=df_nonf, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
-
-#toc()
+#ci.reliability(data=df_fict_highVar_1, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
 
 ```
 
-__Outcome.__
+__Outcome__. As expected, our code works. Our statistic is as follows:
 
+![](imgs/08_cutoff80Statistic.png)
 
-####Attempt 9
+We do have one warning: 
 
------
+![](imgs/08_cutoff80Warning.png)
 
-```{r}
-
-#check if any vars have 0 variance
-sum(apply(df_foil, 2, var) == 0) 
-#tic()
-
-#run the same code on our new data
-#ci.reliability(data=df_foil, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
-
-#toc()
-
-```
-
+We think that this is indicates that our categorical distribution is 'poorly behaved', and thus that we may want to increase the number of bootstrap interations even more, maybe to 10,000.  Otherwise extreme percentiles of the resampling distribution used in calculations may be / will be too inaccurate. Alternatively, we may be able to decrease the CI from 95% to 90%.
 
 -----
 
-<br>
+__References__
 
-__Full references__
+Dunn, T. J., Baguley, T., & Brunsden, V. (2013). From alpha to omega: a practical solution to the pervasive problem of internal consistency estimation. _Br J Psychol._, 105(3), 399-412. [doi](https://doi.org/10.1111/bjop.12046)
 
-Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using structural equation modeling: An alternative to coefficient alpha. _Psychometrika_, 74, 155--167.
+Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using structural equation modeling: An alternative to coefficient alpha. _Psychometrika_, 74(1), 155--167. [doi](https://doi.org/10.1007/s11336-008-9099-3)
 
-Kelley, K. & Pornprasertmanit, P. (2016). Confidence intervals for population reliability coefficients: Evaluation of methods, recommendations, and software for homogeneous composite measures. _Psychological Methods._
+Kelley, K. & Pornprasertmanit, P. (2016). Confidence intervals for population reliability coefficients: Evaluation of methods, recommendations, and software for homogeneous composite measures. _Psychological Methods_, 21(1), 69-92. [doi](https://doi.org/10.1037/a0040086)
 
 McDonald, R. P. (1999). _Test theory: A unified approach_. Mahwah, New Jersey: Lawrence Erlbaum Associates, Publishers.
+
 
 
