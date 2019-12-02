@@ -13,6 +13,7 @@ output:
 __Code written:__ 2019-11-30  
 __Last run:__ `r Sys.Date()`   
 __Authors:__ Navona Calarco & Colin Decker  
+__Website:__ https://rpubs.com/navona/Mar_categoricalOmegaTesting  
 __Git repo:__ https://github.com/navonacalarco/NRC_Mar  
 __R version laptop:__ platform: x86_64-apple-darwin15.6.0, arch: x86_64, os: darwin15.6.0, system: x86_64, darwin15.6.0, major: 3, minor: 5.3, year: 2019, month: 03, day: 11, svn rev: 76217, language: R, version.string: R version 3.5.3 (2019-03-11), nickname: Great Truth  
 __R version desktop:__ platform: x86_64-apple-darwin15.6.0, arch: x86_64, os: darwin15.6.0, system: x86_64, darwin15.6.0, major: 3, minor: 5.1, year: 2018, month: 07, day: 02, svn rev: 74947, language: R, version.string: R version 3.5.1 (2018-07-02), nickname: Feather Spray  
@@ -248,7 +249,7 @@ We do have one warning:
 
 ![](imgs/08_cutoff80Warning.png)
 
-We think that this is indicates that our categorical distribution is 'poorly behaved', and thus that we may want to increase the number of bootstrap interations even more, maybe to 10,000.  Otherwise extreme percentiles of the resampling distribution used in calculations may be / will be too inaccurate. Alternatively, we may be able to decrease the CI from 95% to 90%.
+We think that this is indicates that our categorical distribution is 'poorly behaved', and thus that we may want to increase the number of bootstrap interations even more, maybe to 10,000.  Otherwise extreme percentiles of the resampling distribution used in calculations may be / will be too inaccurate. Alternatively, we may be able to decrease the CI from 95% to 90%. However, we are not sure why we see this error now, and not when we were using variables with lower average variance ... will need to look into this. 
 
 -----
 
@@ -261,6 +262,8 @@ Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using structu
 Kelley, K. & Pornprasertmanit, P. (2016). Confidence intervals for population reliability coefficients: Evaluation of methods, recommendations, and software for homogeneous composite measures. _Psychological Methods_, 21(1), 69-92. [doi](https://doi.org/10.1037/a0040086)
 
 McDonald, R. P. (1999). _Test theory: A unified approach_. Mahwah, New Jersey: Lawrence Erlbaum Associates, Publishers.
+
+-----
 
 
 
