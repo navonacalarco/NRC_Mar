@@ -1,0 +1,268 @@
+---
+title: | 
+  | Attempt to estimate omega and CI for categorical data in NRC study: Documentation of our progress...
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+    code_folding: show
+---
+
+-----
+
+__Code written:__ 2019-11-30  
+__Last run:__ `r Sys.Date()`   
+__Authors:__ Navona Calarco & Colin Decker  
+__R version laptop:__ `r version`  
+
+-----
+
+__Description__  
+This notebook details our attempts to obtain categorical omega reliability estimates and CIs on data from Dr. Mar's NRC study. We intend to estimate omega/CIs separately for subscales (as global scales are not unidimesional). 
+
+__Relevant papers we read__.  
+McDonald (1999)  
+Dunn et al. (2013)    
+Kelley and Pornprasertmanit (2016)    
+Green and Yang (2009)    
+
+__Relevant documentation__.  
+https://www.rdocumentation.org/packages/MBESS/versions/4.6.0/topics/ci.reliability #MBESS  
+https://github.com/cran/MBESS/blob/master/R/ci.reliability.R #code underlying ci.reliability()  
+https://personality-project.org/r/psych/help/omega.html #psych omega
+
+
+```{r setup}
+
+#conditional install and load libraries
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(MBESS, tictoc, lavaan)
+
+#read in test df
+df_fict <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_fict_"))
+df_nonf <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_nonf_"))
+df_foil <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_foil_"))
+
+```
+
+-----
+
+####Attempt 1
+We start by looking at the `fict` subscale of the ART, which is a 108x200 matrix (_m_=variables, _n_=observations). 
+
+We try to use the MBESS function `ci.reliability` with the `type='categorical'` argument. We use `interval.type == 'bca'`, short for "bias corrected and accelerated bootstrap", which is recommended for categorical omega in Kelley and Pornprasertmanit (2016). These settings calculate coefficient omega for categorical items by accounting for both item covariances and item thresholds using Green and Yang's formula (2009, formula 21). 
+
+Note: We will ultimately want to use 1000 or 10,000 bootstraps, but in the interest of computing time, we are testing with B=220. We chose this number with the belief that `B` must be greater than the number of observations/rows in the dataset. And it was easy to remember. 
+
+```{r 1}
+
+#categorical
+#ci.reliability(data=df_fict, type="categorical", conf.level = 0.95, interval.type="bca", B=220)
+
+```
+
+__Outcome.__ The code runs for a bit. We can see the following output if we run interactively in RStudio:
+
+![](imgs/01_NA_meanVar.png)
+<br>
+
+This output tells us that some iterations have run, as we see several temp dfs are created (all of dimension 108x10). But, after a short period of time (<30 seconds) we get the following error: `Error in if (const(t, min(1e-08, mean(t, na.rm = TRUE)/1e+06))) { :  missing value where TRUE/FALSE needed`
+  
+We expect that this error is related to the fact that, in our statistical output, we see `mean` and `var` could not be calculated (are all NAs), which is likely an upshot of the fact that some variables in our data have 0 variance (i.e., all participants answered 'no').
+
+We see something else strange: it seems that the number of created dfs created is 222 (31 rows of 7 dataframes in each row = 217 dataframes, plus an extra 5 in a 32nd row). However, we expected 220 dfs, given that we specified `B` = 220...
+ 
+-----
+
+####Attempt 2
+Since we are pretty sure that some of our problems are related to features of our data (namely having some variables with 0 variance), we remove those variables from our dataset.
+
+```{r}
+
+#remove the variables with 0 variance
+df_fict_no0var <- df_fict[, colSums(df_fict != 0) > 0] #we have 0 variance if all scores are equal to 0; we lose 2 variables
+
+#rerun the same omega model as above
+#ci.reliability(data=df_fict_no0var, type="categorical", conf.level = 0.95, interval.type="bca", B=220)
+
+```
+
+__Outcome__. The code still fails; this time, R crashes after several minutes. No idea...
+
+-----
+
+####Attempt 3
+
+We wonder if there's some other feature of our data that's weird but yet undiscovered. We decide to create toy data (that shares overall features with our real ART fiction data), and try our code on that.
+
+```{r 3}
+
+#make toy dataset
+set.seed(123) #reproducible
+test_1 <- as.data.frame(matrix(rbinom(200*108,1,0.5),200, 108)) #same features of data (mxn, binary)
+
+#run the same code as above
+#ci.reliability(data=test_1, type="categorical", conf.level = 0.95, interval.type="bca", B=220)
+
+```
+
+__Outcome__. Again, R crashes after several minutes, without any error output. 
+
+-----
+
+####Attempt 4
+
+Maybe we have too many variables _m_ compared to our number of observations _n_? Let's arbitrarily make our data smaller (_m_=20)... this should also help with runtime (which we will capture with the `tictoc` library).
+
+```{r}
+
+#make smaller df
+test_2 <- test_1[, 1:20]
+
+#start timer
+#tic()
+
+#run the same code as above
+#ci.reliability(data=test_2, type="categorical", conf.level = 0.95, interval.type="bca", B=220)
+
+#end timer
+#toc()
+
+```
+
+__Outcome__. OMG! We actually have results! 
+
+![](imgs/04_toySuccess.png)
+
+We have warning from `lavann` about negative variances, but this may be OK if the negative variances are small. We also see that with _m_=20, our code took 303.635 seconds (~5 minutes to run) on my laptop of questionable strength, so that's not too bad. 
+
+-----
+
+####Attempt 5
+
+Spurred on by our success above, we try to run our code on a smaller subset (again, _m_=20) of our real ART fiction data. First, we try data without any of the variables with 0 variance. 
+
+```{r}
+
+#take m=20 from our real data, without any variables with 0 variance
+test_3 <- df_fict_no0var[, 1:20]
+
+#run the same code as above
+#ci.reliability(data=test_3, type="categorical", conf.level = 0.95, interval.type="bca", B=220)
+
+```
+
+__Outcome__. We get the following error: 
+
+![](imgs/05_aIsNA.png)
+
+This error comes from the `bca.ci`, which is called by `boot.out`, which is called by `MBESS`. We have see this error before, in other contexts. The error is related to not having enough bootstrap iterations. [More info here](https://stats.stackexchange.com/questions/37918/why-is-the-error-estimated-adjustment-a-is-na-generated-from-r-boot-package). So, we'll try the same code with more iterations.
+
+-----
+
+####Attempt 6
+We run the same code, again on our real ART fiction data (with potentially problematic 0 variance variables removed), this time with 1000 iterations. We'll also record the time it takes to run this code, if it works. 
+
+```{r}
+
+#tic()
+
+#run the same code as above, but with more iterations
+#ci.reliability(data=test_3, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
+
+#toc()
+
+```
+
+__Outcome:__ The code runs! It takes 884.91 seconds (14.7485 minutes) to run. We have a _huge_ amount of output. Essentially, we have 1000 instances of the chunk below, one for each iteration: 
+
+![](imgs/06_output.png)
+
+Here, we see the the `mean` and `var` columns in the statistical output are again NA, as in 'Attempt 1'. But, our code ran, and we seem (below) to have reasonable omega and CI estimates (?), so maybe, it's not the case that the NA values in the `mean` and `var` columnes aren't a problem...?
+
+We also see that, in some output, some variables have an `nlev` (number of levels) values of 1, whereas most others have 2. The variables with `nlev` of 1 are indicated by `***`. There is some pattern to the variables that are flagged (e.g., 5 appears a lot, but not always), but there is variability between chunks. 
+
+At the bottom of several chunks, we see warnings. Some chunks have no warnings, some have 3 or more. The warnings shown in the image below appear a lot. It seems that all warnings are limited to these 3 types. The first appears many times; the second several times, and the third a small number of times, with a small coupling of variables, always seeming to include 17 (paired with 13, 9, 11))  
+![](imgs/06_warnings.png)
+
+Finally, after 1000 chunks of this sort, we do get output from the model: 
+
+![](imgs/06_statistics.png)
+
+-----
+
+####Attempt 7
+We are no longer confident that the variables with 0 variance, in our real ART fiction data, pose a problem for our estimate. So, we want to attempt to run our code with those variables left in. 
+
+```{r}
+
+#find the 2 variables with 0 variance
+which(apply(df_fict, 2, var) == 0) #vars 17 and 31 ... so our Attempt #6 includes 1 variable (ART122) with no variance!
+
+#include them in our new df, along with 18 other vars
+df_fict_small0var <- df_fict[, c(1:19, 31)]
+
+#run the same code as above
+#ci.reliability(data=df_fict_small0var, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
+
+```
+
+__Outcome.__ The code fails, quickly, with the error below, which confirms that variables with 0 variance do pose a problem for our estimates. We will have to do something about these problematic variables when we analyze our data.
+![](imgs/07_0varError.png)
+
+-----
+
+####Attempt 8
+
+By way of summary, we know that, (1) our data can't contain variables with 0 variance, (2) we may need to run a large number of bootstraps to get the code to run, and (3) our data may have too many variables _m_ for our number of observations _n_. Bust just how many _m_ are too many _m_?
+
+Next, let's see if we can run our estimates on our other ART subscales, which contain fewer variables. First, let's try the non-fiction subscale, which contains 50 variables. We'll keep 1000 iterations to be safe. 
+
+```{r}
+
+#check if any vars have 0 variance
+sum(apply(df_nonf, 2, var) == 0) #none, great
+
+#tic()
+
+#run the same code on our new data
+ci.reliability(data=df_nonf, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
+
+#toc()
+
+```
+
+__Outcome.__
+
+
+####Attempt 9
+
+-----
+
+```{r}
+
+#check if any vars have 0 variance
+sum(apply(df_foil, 2, var) == 0) 
+#tic()
+
+#run the same code on our new data
+#ci.reliability(data=df_foil, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
+
+#toc()
+
+```
+
+
+-----
+
+<br>
+
+__Full references__
+
+Green, S. B., & Yang, Y. (2009). Reliability of summed item scores using structural equation modeling: An alternative to coefficient alpha. _Psychometrika_, 74, 155--167.
+
+Kelley, K. & Pornprasertmanit, P. (2016). Confidence intervals for population reliability coefficients: Evaluation of methods, recommendations, and software for homogeneous composite measures. _Psychological Methods._
+
+McDonald, R. P. (1999). _Test theory: A unified approach_. Mahwah, New Jersey: Lawrence Erlbaum Associates, Publishers.
+
+

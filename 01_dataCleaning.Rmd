@@ -1,0 +1,77 @@
+---
+title: "01_dataCleaning"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=F}
+
+#conditional install and load libraries
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(foreign)
+
+#load data
+df <- read.spss('../NRC_data/July24_NRC_analysis14.sav', to.data.frame=TRUE) #used for SEM analysis
+
+```
+
+__clean the reading scales__
+
+```{r readingScales}
+
+#make smaller dfs
+df_sentences <- df[, grepl("^SC.*_scored$", names(df))]  #p=28
+df_synonyms <-  df[, grepl("^Syn.*_scored$", names(df))] #p=60
+df_analogies <- df[, grepl("^A.*_scored$", names(df))]   #p=20
+
+#change all NAs to 0 
+df_sentences[is.na(df_sentences)] <- 0 ; df_synonyms[is.na(df_synonyms)] <- 0 ; df_analogies[is.na(df_analogies)] <- 0
+
+```
+
+__clean the ART (print exposure)__
+
+```{r ART scale}
+
+#grep ART vars
+df_ART <- df[, grep("ART_", names(df), value=TRUE)] 
+
+#remove subscale scores -- recalculate to ensure db calculations correct (leverage no numeric values in var name)
+df_ART <- df_ART[, grep('[0-9]+', names(df_ART))]
+
+#modify variables names so consistent with fict/nonf/foil names from Dr. Mar/Eric -- make 6 digits
+for(i in 1:length(names(df_ART))){
+  if(nchar(names(df_ART)[i])==5){ #if 5 characters, add 2 0s
+    names(df_ART)[i]<-paste(substr(names(df_ART)[i],1,4),"00", substr(names(df_ART)[i],5,5), sep="")
+  }
+  if(nchar(names(df_ART)[i])==6){ #if 6 characters, add 1 0s
+    names(df_ART)[i]<-paste(substr(names(df_ART)[i],1,4),"0", substr(names(df_ART)[i],5,6), sep="")
+  }
+}
+
+#remove underscore
+names(df_ART) <- gsub("_", "", names(df_ART), fixed = TRUE) 
+
+#change all NAs to 0 
+df_ART[is.na(df_ART)] <- 0
+
+#isolate items in each category (note: fiction missing ART060 and ART031)
+df_fict <- df_ART[, c(
+'ART019', 'ART023', 'ART028', 'ART035', 'ART036', 'ART064', 'ART069', 'ART073', 'ART077', 'ART083', 'ART085', 'ART087', 'ART091', 'ART102', 'ART117', 'ART121', 'ART122', 'ART132', 'ART140', 'ART141', 'ART157', 'ART163', 'ART179', 'ART192', 'ART002', 'ART009', 'ART011', 'ART037', 'ART051', 'ART056', 'ART058', 'ART071', 'ART079', 'ART104', 'ART105', 'ART112', 'ART131', 'ART138', 'ART146', 'ART149', 'ART150', 'ART151', 'ART156', 'ART162', 'ART181', 'ART182', 'ART183', 'ART191', 'ART198', 'ART012', 'ART018', 'ART020', 'ART026', 'ART032', 'ART042', 'ART048', 'ART065', 'ART070', 'ART074', 'ART081', 'ART096', 'ART097', 'ART098', 'ART099', 'ART101', 'ART107', 'ART119', 'ART133', 'ART135', 'ART168', 'ART170', 'ART171', 'ART173', 'ART003', 'ART054', 'ART066', 'ART093', 'ART125', 'ART142', 'ART186', 'ART190', 'ART193', 'ART200', 'ART004', 'ART005', 'ART008', 'ART017', 'ART021', 'ART022', 'ART038', 'ART059', 'ART067', 'ART082', 'ART084', 'ART089', 'ART090', 'ART094', 'ART111', 'ART147', 'ART166', 'ART172', 'ART187', 'ART188', 'ART189', 'ART194', 'ART196', 'ART197', 'ART199')]
+
+df_nonf <- df_ART[, c(
+'ART015', 'ART044', 'ART123', 'ART128', 'ART129', 'ART134', 'ART136', 'ART148', 'ART158', 'ART180', 'ART029', 'ART045', 'ART068', 'ART076', 'ART110', 'ART114', 'ART120', 'ART145', 'ART160', 'ART177', 'ART007', 'ART033', 'ART039', 'ART046', 'ART086', 'ART118', 'ART154', 'ART175', 'ART176', 'ART185', 'ART010', 'ART014', 'ART025', 'ART075', 'ART078', 'ART088', 'ART095', 'ART124', 'ART137', 'ART167', 'ART013', 'ART047', 'ART080', 'ART103', 'ART109', 'ART130', 'ART143', 'ART144', 'ART165', 'ART174')]
+
+df_foil <- df_ART[, c(
+'ART001', 'ART006', 'ART016', 'ART024', 'ART027', 'ART030', 'ART034', 'ART040', 'ART041', 'ART043', 'ART049', 'ART050', 'ART052', 'ART053', 'ART055', 'ART057', 'ART061', 'ART062', 'ART063', 'ART072', 'ART092', 'ART100', 'ART106', 'ART108', 'ART113', 'ART115', 'ART116', 'ART126', 'ART127', 'ART139', 'ART152', 'ART153', 'ART155', 'ART159', 'ART161', 'ART164', 'ART169', 'ART178', 'ART184', 'ART195')]
+
+```
+
+```{r write out}
+
+#write out a df for testing
+write.csv(df_fict, paste0('../NRC_data/out/df_fict_', Sys.Date(), '.csv', sep=''), row.names = F)
+write.csv(df_nonf, paste0('../NRC_data/out/df_nonf_', Sys.Date(), '.csv', sep=''), row.names = F)
+write.csv(df_foil, paste0('../NRC_data/out/df_foil_', Sys.Date(), '.csv', sep=''), row.names = F)
+
+```
+
