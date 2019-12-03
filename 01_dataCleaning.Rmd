@@ -68,7 +68,12 @@ df_foil <- df_ART[, c(
 
 ```{r write out}
 
-#write out a df for testing
+#write out reading dfs
+write.csv(df_analogies, paste0('../NRC_data/out/df_analogies_', Sys.Date(), '.csv', sep=''), row.names = F)
+write.csv(df_sentences, paste0('../NRC_data/out/df_sentences_', Sys.Date(), '.csv', sep=''), row.names = F)
+write.csv(df_synonyms, paste0('../NRC_data/out/df_synonyms_', Sys.Date(), '.csv', sep=''), row.names = F)
+
+#write out ART dfs
 write.csv(df_fict, paste0('../NRC_data/out/df_fict_', Sys.Date(), '.csv', sep=''), row.names = F)
 write.csv(df_nonf, paste0('../NRC_data/out/df_nonf_', Sys.Date(), '.csv', sep=''), row.names = F)
 write.csv(df_foil, paste0('../NRC_data/out/df_foil_', Sys.Date(), '.csv', sep=''), row.names = F)

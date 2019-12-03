@@ -1,0 +1,58 @@
+---
+title: | 
+  | Categorical Omega calculations for NRC reading scales
+output:
+  html_document:
+    toc: true
+    toc_depth: 5
+    code_folding: show
+---
+
+-----
+
+__Code written:__ 2019-12-02  
+__Last run:__ `r Sys.Date()`   
+__Authors:__ Navona Calarco & Colin Decker  
+__Website:__ https://rpubs.com/navona/Mar_categoricalOmegaReading
+__Git repo:__ https://github.com/navonacalarco/NRC_Mar  
+__R version desktop:__ platform: x86_64-apple-darwin15.6.0, arch: x86_64, os: darwin15.6.0, system: x86_64, darwin15.6.0, major: 3, minor: 5.1, year: 2018, month: 07, day: 02, svn rev: 74947, language: R, version.string: R version 3.5.1 (2018-07-02), nickname: Feather Spray  
+
+-----
+
+__Description.__  
+This notebook details the code used to run categorical omega on the NRC reading scales. We use categorical as the scales only have X options; thus, should not be considered continuous. Right, wrong. Binary. 
+
+__Relevant documentation__.  
+https://www.rdocumentation.org/packages/MBESS/versions/4.6.0/topics/ci.reliability #MBESS  
+https://github.com/cran/MBESS/blob/master/R/ci.reliability.R #code underlying ci.reliability()  
+
+
+__Set up__
+
+```{r setup}
+
+#conditional install and load libraries
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(MBESS, tictoc, lavaan)
+
+#read in test df
+df_analogies <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_analogies_"))
+df_sentences <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_sentences_"))
+df_synonyms <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_synonyms_"))
+
+```
+
+```{r}
+
+#check to see if no variance in any items -- none, great
+sum(apply(df_analogies, 2, var) == 0) 
+sum(apply(df_sentences, 2, var) == 0) 
+sum(apply(df_synonyms, 2, var) == 0) 
+
+#run models
+ci.reliability(data=df_analogies, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
+ci.reliability(data=df_sentences, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
+ci.reliability(data=df_synonyms, type="categorical", conf.level = 0.95, interval.type="bca", B=1000)
+
+```
+
