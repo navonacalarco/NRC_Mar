@@ -7,7 +7,7 @@ output: html_document
 
 #conditional install and load libraries
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(foreign)
+pacman::p_load(foreign, tidyverse, purrr, dplyr)
 
 #load data
 df <- read.spss('../NRC_data/July24_NRC_analysis14.sav', to.data.frame=TRUE) #used for SEM analysis
@@ -66,6 +66,166 @@ df_foil <- df_ART[, c(
 
 ```
 
+__clean the PLoR__
+
+```{r}
+
+#for clarity, vector of names in df
+df_names <- names(df)
+
+#find motivation items (but not demotivation items)
+df_motivations  <- df[, grepl("Mtv", df_names) & !grepl("DMtv", df_names)] #excluded 3
+
+#find obstacles
+df_obstacles <- df[, grepl("DMtv", df_names)] #excluded 0
+
+#find attitudes
+df_attitudes<- df[, grepl("Att", df_names)] #excluded 2? plus 2 reverse scored
+
+#find behaviours
+df_behaviours <- df[, grepl("Bhv", df_names)] #excluded 0, but 3 reverse scored
+
+#in these dfs, recode the labels (e.g. Strongly Agree, to numeric)
+recode_fn <- function(df){
+  df <- as.data.frame(apply(df, 2, function(x)gsub('\\s+', '',x))) #remove spaces
+  df<- data.frame(lapply(df, as.character), stringsAsFactors=FALSE) #make character
+  df[df=="DisagreeStrongly"] <- '1' #recode variables
+  df[df=="Disagree"] <- '2'
+  df[df=="DisagreeSomewhat"] <- '3'
+  df[df=="NeitherAgreenorDisagree"] <- '4'
+  df[df=="AgreeSomewhat"] <- '5'
+  df[df=="Agree"] <- '6'
+  df[df=="AgreeStrongly"] <- '7'
+  return(df)
+}
+
+#use function
+df_motivations  <- recode_fn(df_motivations)
+df_obstacles    <- recode_fn(df_obstacles)
+df_attitudes    <- recode_fn(df_attitudes)
+df_behaviours   <- recode_fn(df_behaviours)
+
+################################
+#Factor 1: Reading Motivations (n=14)
+################################
+
+#facet 1: reading to grow (n=7)
+df_motivations_1 <- df_motivations[, c(
+  'Mtv3',  #03. I read to learn new things (e.g., to learn a new skill).	
+  'Mtv8',  #08. I read to help me better understand myself (e.g., personal development).	
+  'Mtv14', #14. I read to improve my language ability (e.g., vocabulary, grammar).	
+  'Mtv16', #16. I read to better understand others.
+  'Mtv17', #17. I read to be a better role model for others.
+  'Mtv4',  #04. I read to think in new ways (e.g., be more creative, expand my worldview).	
+  'Mtv6'   #06. I read to feel connected to other people.	
+)]
+
+#facet 2: read for enjoyment (n=5)
+df_motivations_2 <- df_motivations[, c(
+  'Mtv10', #10. I read to relax.	
+  'Mtv2',  #02. I read for entertainment (e.g., to pass the time).	
+  'Mtv1',  #01. I read for pleasure.	
+  'Mtv7',  #07. I read to become immersed in the world of the text.
+  'Mtv15'  #15. I read to experience certain emotions.	
+)]
+
+#facet 3: reading to avoid guilt (n=2)
+df_motivations_3 <- df_motivations[, c(
+  'Mtv11', #11. I read because I would feel guilty/ embarrassed if I did not.
+  'Mtv9'   #9. I read to avoid interacting with others.	
+)]
+
+#exclude
+df_motivations <- subset(df_motivations, select=-c(
+  Mtv5,  #05. I read to impress others.	
+  Mtv12, #12. I read because of school/ work requirements.	
+  Mtv13  #13. I read to keep up with current culture (e.g., new music, celebrities, current events and news).	
+))
+
+################################
+#Factor 2: Reading Obstacles (n=15)
+################################
+
+#facet 1: do not enjoy  (n=7)
+df_obstacles_1 <- df_obstacles[, c(
+  'DMtv4',  #04. I often don't read because I find it boring.	
+  'DMtv11', #11. I often don't read because I never got in the habit.	
+  'DMtv5',  #05. often don't read because I don't have to.	
+  'DMtv6',  #06. I often don't read because I don't see the point.
+  'DMtv7',  #07. I often don't read because I'd rather be doing something else.	
+  'DMtv13', #13. I often don't read because being asked to analyze books in highschool made reading less pleasurable.
+  'DMtv12'  #12. I often don't read because being assigned things to read in highschool ruined it for me.
+)]
+
+#facet 2: circumstances (n=4)
+df_obstacles_2 <- df_obstacles[, c(
+  'DMtv1',  #01. I often don't read because I don't have enough time.	
+  'DMtv2',  #02. I often don't read because I am feeling too tired.	
+  'DMtv9',  #09. I often don't read because of the cost.	
+  'DMtv14'  #14. I read all day at work/school and this prevents me from enjoying reading.
+)]
+
+#facet 3: reading is not easy (n=4)
+df_obstacles_3 <- df_obstacles[, c(
+  'DMtv15', #15. I often don't read because my friends don't like to read.
+  'DMtv8',  #08. I often don't read because reading is not seen as cool.	
+  'DMtv10', #10. I often don't read because materials are not accessible to me where I live.	
+  'DMtv3'   #03. I often don't read because I find it difficult.	
+)]
+
+################################
+#Factor 3: Reading Attitudes (n=6) ... 
+################################
+
+#facet 1: desirable (n=3)
+df_attitudes_1 <- df_attitudes[, c(
+  'Att3_R',  #03. I would like to spend less time reading.	
+  'Att2',  #02. I would like to spend more time reading.
+  'Att8'   #08. It is important to be well-read
+)]
+
+#facet 2: identity (n=3)
+df_attitudes_2 <- df_attitudes[, c(
+  'Att7',  #07. I feel that what I read is a good reflection of who I am as a person.	
+  'Att5',  #05. You can tell a lot about a person by what s/he reads.	
+  'Att1'   #01. I think of myself as a 'reader'.	
+)]
+
+#REMOVE
+df_attitudes <- subset(df_attitudes, select=-c(
+  Att4,  #04. I sometimes feel embarrassed about what I choose to read.	
+  Att6,  #06. I don't understand why some people read certain genres (e.g., sci-fi, romance, history).	
+  Att6_R, #excluded
+  Att3 #reverse scored
+))
+
+################################
+#Factor 4: Reading Styles (n=8)
+################################
+
+#facet 1: surface (n=3)
+df_behaviours_1 <- df_behaviours[, c(
+  'Bhv3', #03. I often skim things that I read online to get the gist of them.	
+  'Bhv4', #04. I often skim things that I read in hard copy (i.e., offline) to get the gist of them.	
+  'Bhv5'  #05. I can easily stop reading something if I don't find it worth my while.
+)]
+
+#facet 2: compulsive (n=3)
+df_behaviours_2 <- df_behaviours[, c(
+  'Bhv7', #07. I feel compelled to read things that are in the same series as something that I've enjoyed.	
+  'Bhv8', #08. I often think about what I have been reading even when I'm not actively reading it.
+  'Bhv6' #06. I feel compelled to finish everything that I begin reading.	
+)]
+
+#facet 3: prolific (n=2)
+df_behaviours_3 <- df_behaviours[, c(
+  'Bhv2', #02. I like to have more than one thing to read "on the go" at a time.	
+  'Bhv1'  #01. I enjoy re-reading things that I've read before.	
+)]
+
+```
+
+
 ```{r write out}
 
 #write out reading dfs
@@ -77,6 +237,39 @@ write.csv(df_synonyms, paste0('../NRC_data/out/df_synonyms_', Sys.Date(), '.csv'
 write.csv(df_fict, paste0('../NRC_data/out/df_fict_', Sys.Date(), '.csv', sep=''), row.names = F)
 write.csv(df_nonf, paste0('../NRC_data/out/df_nonf_', Sys.Date(), '.csv', sep=''), row.names = F)
 write.csv(df_foil, paste0('../NRC_data/out/df_foil_', Sys.Date(), '.csv', sep=''), row.names = F)
+
+#write out PLoR scale dfs
+
+#first, see names of dfs in environment
+names(dfs <- Filter(function(x) is(x, "data.frame"), mget(ls())))
+      
+#make a list of dfs we want
+list_of_dfs <- list("df_motivations"    = df_motivations,  
+                  "df_motivations_1"    = df_motivations_1,
+                  "df_motivations_2"    = df_motivations_2,
+                  "df_motivations_3"    = df_motivations_3,
+                  "df_obstacles"        = df_obstacles,  
+                  "df_obstacles_1"      = df_obstacles_1,    
+                  "df_obstacles_2"      = df_obstacles_2,    
+                  "df_obstacles_3"      = df_obstacles_3,   
+                  "df_attitudes"        = df_attitudes,
+                  "df_attitudes_1"      = df_attitudes_1,             
+                  "df_attitudes_2"      = df_attitudes_2,   
+                  "df_behaviours"       = df_behaviours,
+                  "df_behaviours_1"     = df_behaviours_1,
+                  "df_behaviours_2"     = df_behaviours_2,
+                  "df_behaviours_3"     = df_behaviours_3)
+
+#write a function that takes names, and pastes into directory
+output_csv <- function(data, names){
+  folder_path <- '../NRC_data/out/PLoR/'
+  write_csv(data, paste0(folder_path, 'PLoR_', names, '.csv'))
+}
+
+#write out dfs using purrr
+list(data=list_of_dfs,
+  names=names(list_of_dfs)) %>%
+  pmap(output_csv)
 
 ```
 
