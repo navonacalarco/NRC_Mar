@@ -13,7 +13,7 @@ knitr::opts_knit$set(root.dir = '../data/out/PLoR')
 ```{r}
 
 #libraries
-library('MBESS')
+library('MBESS', 'dplyr')
 
 #read in all PLoR csvs
 all_dfs = list.files(pattern="*.csv")
@@ -25,8 +25,46 @@ omega_fn <- function(df){
 }
 
 #apply fn to all PLoR dfs -- results will have same name
-cCmd  <- paste(all_dfs , "<- omega_fn(" ,all_dfs,")", sep="")
+#cCmd  <- paste(all_dfs , "<- omega_fn(" ,all_dfs,")", sep="")
+#eCmd  <- parse(text=cCmd)
+#eval(eCmd)
+
+```
+
+```{r calculations for table}
+
+#write fn to find missing values -- and replace with average of participant's scores  score
+replaceMissing_fn <- function(df){
+  df <- as.matrix(df)
+  missing <- which(is.na(df), arr.ind=TRUE)
+  df[missing] <- rowMeans(df, na.rm=TRUE)[missing[,1]]
+  df <- as.data.frame(df)
+}
+
+#apply fn to all PLoR dfs -- results will have same name
+cCmd  <- paste(all_dfs , "<- replaceMissing_fn(" ,all_dfs,")", sep="")
 eCmd  <- parse(text=cCmd)
 eval(eCmd)
 
+#row sums function
+rowSums_fn = function(df){
+    df = mutate(df, total=rowSums(df))
+    return(df)
+}
+
+#apply fn to all PLoR dfs -- results will have same name
+cCmd  <- paste(all_dfs , "<- rowSums_fn(" ,all_dfs,")", sep="")
+eCmd  <- parse(text=cCmd)
+eval(eCmd)
+
+#turn all dataframes into a list
+df.list <- Filter(function(x) is(x, "data.frame"), mget(ls()))
+
+#for each dataframe in the list:
+means <- t(as.data.frame(lapply(df.list, function (x) mean(x[,'total'], na.rm= TRUE)))) 
+sds   <- t(as.data.frame(lapply(df.list, function (x) sd(x[,'total'], na.rm= TRUE))))
+min   <- t(as.data.frame(lapply(df.list, function (x) min(x[,'total'], na.rm= TRUE))))
+max   <- t(as.data.frame(lapply(df.list, function (x) max(x[,'total'], na.rm= TRUE))))
+
 ```
+
