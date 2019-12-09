@@ -68,7 +68,7 @@ df_foil <- df_ART[, c(
 
 __clean the PLoR__
 
-```{r}
+```{r PLoR}
 
 #for clarity, vector of names in df
 df_names <- names(df)
@@ -205,9 +205,9 @@ df_attitudes <- subset(df_attitudes, select=-c(
 
 #facet 1: surface (n=3)
 df_behaviours_1 <- df_behaviours[, c(
-  'Bhv3', #03. I often skim things that I read online to get the gist of them.	
-  'Bhv4', #04. I often skim things that I read in hard copy (i.e., offline) to get the gist of them.	
-  'Bhv5'  #05. I can easily stop reading something if I don't find it worth my while.
+  'Bhv3_R', #03. I often skim things that I read online to get the gist of them.	
+  'Bhv4_R', #04. I often skim things that I read in hard copy (i.e., offline) to get the gist of them.	
+  'Bhv5_R'  #05. I can easily stop reading something if I don't find it worth my while.
 )]
 
 #facet 2: compulsive (n=3)
@@ -223,10 +223,16 @@ df_behaviours_3 <- df_behaviours[, c(
   'Bhv1'  #01. I enjoy re-reading things that I've read before.	
 )]
 
+df_behaviours <- subset(df_behaviours, select=-c(
+  Bhv3, #excluded 
+  Bhv4, #excluded 
+  Bhv5  #excluded 
+))
+
 ```
 
 
-```{r write out}
+```{r write out, results='hide'}
 
 #write out reading dfs
 write.csv(df_analogies, paste0('../NRC_data/out/df_analogies_', Sys.Date(), '.csv', sep=''), row.names = F)
