@@ -3,15 +3,30 @@ title: "04_omegaPLoR"
 output: html_document
 ---
 
+```{r setup}
+
+#set working directory
+knitr::opts_knit$set(root.dir = '../data/out/PLoR')
+
+```
+
 ```{r}
 
+#libraries
 library('MBESS')
 
 #read in all PLoR csvs
 all_dfs = list.files(pattern="*.csv")
 for (i in 1:length(all_dfs)) assign(all_dfs[i], read.csv(all_dfs[i]))
 
-#run omega -- hierarchical as 7 levels -- for all dfs
+#fn for omega -- hierarchical as 7 levels
 omega_fn <- function(df){
   ci.reliability(df,  type='hierarchical', interval.type = 'bca', B=1000, conf.level=.95 )
 }
+
+#apply fn to all PLoR dfs -- results will have same name
+cCmd  <- paste(all_dfs , "<- omega_fn(" ,all_dfs,")", sep="")
+eCmd  <- parse(text=cCmd)
+eval(eCmd)
+
+```
