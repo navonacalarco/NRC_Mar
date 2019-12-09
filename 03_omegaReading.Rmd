@@ -20,7 +20,7 @@ __R version desktop:__ platform: x86_64-apple-darwin15.6.0, arch: x86_64, os: da
 -----
 
 __Description.__  
-This notebook details the code used to run categorical omega on the NRC reading scales. We use categorical as the scales only have X options; thus, should not be considered continuous. Right, wrong. Binary. 
+This notebook details the code used to run categorical omega on the NRC reading scales. We use categorical as the scales only have 2 levels (right/wrong).
 
 __Relevant documentation__.  
 https://www.rdocumentation.org/packages/MBESS/versions/4.6.0/topics/ci.reliability #MBESS  
