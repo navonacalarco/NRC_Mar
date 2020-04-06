@@ -11,6 +11,9 @@ __Git repo:__ https://github.com/navonacalarco/NRC_Mar
 
 ```{r setup}
 
+#clean environment
+rm(list = ls(all.names = TRUE))
+
 #set working directory
 knitr::opts_knit$set(root.dir = '../data/out/PLoR')
 
@@ -19,7 +22,8 @@ knitr::opts_knit$set(root.dir = '../data/out/PLoR')
 ```{r}
 
 #libraries
-library('MBESS', 'dplyr')
+library('MBESS')
+library('dplyr')
 
 #read in all PLoR csvs
 all_dfs = list.files(pattern="*.csv")
@@ -31,9 +35,9 @@ omega_fn <- function(df){
 }
 
 #apply fn to all PLoR dfs -- results will have same name
-#cCmd  <- paste(all_dfs , "<- omega_fn(" ,all_dfs,")", sep="")
-#eCmd  <- parse(text=cCmd)
-#eval(eCmd)
+cCmd  <- paste(all_dfs , "<- omega_fn(" ,all_dfs,")", sep="")
+eCmd  <- parse(text=cCmd)
+eval(eCmd)
 
 ```
 
