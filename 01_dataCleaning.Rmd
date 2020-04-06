@@ -373,7 +373,7 @@ list_of_dfs <- list("df_motivations"    = df_motivations,
 
 #write a function that takes names, and pastes into directory
 output_csv <- function(data, names){
-  folder_path <- '../NRC_data/out/PLoR/'
+  folder_path <- '../data/out/PLoR/'
   write_csv(data, paste0(folder_path, 'PLoR_', names, '.csv'))
 }
 

@@ -36,9 +36,9 @@ if (!require("pacman")) install.packages("pacman")
 pacman::p_load(MBESS, tictoc, lavaan)
 
 #read in test df
-df_analogies <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_analogies_"))
-df_sentences <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_sentences_"))
-df_synonyms <- read.csv(dir('../NRC_data/out', full.names=T, pattern="^df_synonyms_"))
+df_analogies <- read.csv(dir('../data/out/reading', full.names=T, pattern="^df_analogies_"))
+df_sentences <- read.csv(dir('../data/out/reading', full.names=T, pattern="^df_sentences_"))
+df_synonyms <- read.csv(dir('../data/out/reading', full.names=T, pattern="^df_synonyms_"))
 
 ```
 

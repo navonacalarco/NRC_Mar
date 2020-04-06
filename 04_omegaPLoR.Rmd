@@ -3,6 +3,12 @@ title: "04_omegaPLoR"
 output: html_document
 ---
 
+__Code written:__ 2019-12-02  
+__Last run:__ `r Sys.Date()`   
+__Authors:__ Navona Calarco 
+__Website:__ https://rpubs.com/navona/Mar_categoricalOmegaReading
+__Git repo:__ https://github.com/navonacalarco/NRC_Mar 
+
 ```{r setup}
 
 #set working directory
